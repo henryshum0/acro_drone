@@ -20,9 +20,9 @@ def main():
 	cfg = TrajectoryInterfaceCfg(
 		sampling_rate=50.0,
 		optimize_time=True,
-		time_penalty=100,
+		time_penalty=10,
 		max_velocity=20.0,
-		max_normalized_thrust=60.0,
+		max_normalized_thrust=50.0,
 	)
 	interface = TrajectoryInterface(num_envs=2, cfg=cfg)
 

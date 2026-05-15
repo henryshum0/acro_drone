@@ -71,8 +71,8 @@ class Segment():
         self._duration = duration
         self._poly_pos_order = 10
         self._poly_psi_order = 3
-        self._pos_derivative_costs = pos_derivative_costs or {0: 1.0, 1: 0.0, 2: 0.1, 3: 1e-4, 4: 1e-8}
-        self._psi_derivative_costs = psi_derivative_costs or {0: 1.0, 1: 0.1, 2: 0.0}
+        self._pos_derivative_costs = pos_derivative_costs or {0: 1.0, 1: 0.1, 2: 0.05, 3: 1e-4, 4: 1e-8}
+        self._psi_derivative_costs = psi_derivative_costs or {0: 1.0, 1: 0.1, 2: 0.01}
         self._get_b()
         self._get_A()
         self._get_Hessian()
@@ -369,14 +369,6 @@ class Trajectory():
         b1 = Trajectory._safe_normalize_rows(x_ref_rot)
         b2 = Trajectory._safe_normalize_rows(np.cross(b3, b1))
         b3 = Trajectory._safe_normalize_rows(b3)
-
-        if b1.shape[0] >= 2:
-            b1[0] = b1[1]
-            b2[0] = b2[1]
-            b3[0] = b3[1]
-            b1[-1] = b1[-2]
-            b2[-1] = b2[-2]
-            b3[-1] = b3[-2]
 
         return b1, b2, b3
 

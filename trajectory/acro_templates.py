@@ -19,6 +19,51 @@ def _offset_waypoints(waypoints_xyzs: np.ndarray) -> np.ndarray:
 	waypoints_xyzs = np.asarray(waypoints_xyzs, dtype=float)
 	return waypoints_xyzs - waypoints_xyzs[0]
 
+class StraightLineTemplate(WaypointTemplate):
+	def __init__(self):
+		waypoints_xyzs = np.array([
+			[0.0, 0.0, 1],
+			[6.0, 0.0, 1],
+		])
+		waypoints_xyzs = _offset_waypoints(waypoints_xyzs)
+		waypoints_rpys = np.array([
+			[0.0, 0.0, 0],
+			[0.0, 0.0, 0],
+
+		])
+		waypoints_vels = [
+			[0, 0, 0],
+			[0, 0, 0],
+		]
+		waypoints_accs = [
+			[0, 0, 0],
+			[0, 0, 0],
+		]
+		waypoints_durations = np.array([
+			1,
+			1
+		])
+
+		waypoints_rpys_choices = waypoints_rpys
+		waypoints_scale = [2,2]
+
+		super().__init__(
+			waypoints_xyzs=waypoints_xyzs,
+			waypoints_rpys=waypoints_rpys,
+			waypoints_vels=waypoints_vels,
+			waypoints_durations=waypoints_durations,
+			waypoints_accs=waypoints_accs,
+			spawns=_default_spawn(),
+			rpy_choices=waypoints_rpys_choices,
+			waypoints_scale=waypoints_scale,
+			max_dist=7,
+			difficulty="easy",
+			repeat=0,
+			time_limit_sec=5,
+		)
+		self.waypoints_accs = waypoints_accs
+
+
 class HeartTemplate(WaypointTemplate):
 
 	def __init__(self):

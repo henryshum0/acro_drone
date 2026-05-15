@@ -83,13 +83,16 @@ class CtbrPdController:
         torque = self.kp * error + self.kd * error_d
         wrench = torch.cat((target[:, :1], torque), dim=1)
         thrusts = (self.allocation_matrix_inv @ wrench.T).T
-
+        
         # Bias all motors so none fall below thrust_min (preserves torque).
         if self.thrust_min is not None:
             min_per_env = thrusts.min(dim=1, keepdim=True).values
             bias = torch.clamp(self.thrust_min - min_per_env, min=0.0)
             thrusts = thrusts + bias
-
+        # print(thrusts)
+        # print(thrusts.sum(dim=1))
+        # print(target[:, :1].sum(dim=1))
+        # input()
         if self.thrust_max is not None:
             thrusts = torch.clamp(thrusts, max=self.thrust_max)
 

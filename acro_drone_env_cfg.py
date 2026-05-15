@@ -20,6 +20,7 @@ from isaaclab_contrib.assets import MultirotorCfg
 
 from .controllers.ctbr_pd_cfg import CtbrPdControllerCfg
 from .controllers.mpc import MpcCfg
+from .sensors.noisy_imu_cfg import NoisyImuCfg
 from .trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
 from .trajectory.acro_templates import *
 
@@ -33,7 +34,7 @@ class RacerCfg(MultirotorCfg):
         asset_path=str(Path(__file__).resolve().parent / "assets" / "racer.urdf"),
         fix_base=False,
         merge_fixed_joints=False,
-        make_instanceable=False,
+        make_instanceable=True,
         joint_drive=sim_utils.UrdfConverterCfg.JointDriveCfg(
             gains=sim_utils.UrdfConverterCfg.JointDriveCfg.PDGainsCfg(stiffness=0.0, damping=0.0)
         ),
@@ -59,7 +60,7 @@ class RacerCfg(MultirotorCfg):
     )
 
     init_state: MultirotorCfg.InitialStateCfg = MultirotorCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 1.0),
+        pos=(0.0, 0.0, 0.0),
         rot=(1.0, 0.0, 0.0, 0.0),
         lin_vel=(0.0, 0.0, 0.0),
         ang_vel=(0.0, 0.0, 0.0),
@@ -68,12 +69,12 @@ class RacerCfg(MultirotorCfg):
 
     actuators: dict[str, ThrusterCfg] = {
         "thrusters": ThrusterCfg(
-            dt=1 / 120,
+            dt=1 / 300,
             max_thrust_rate=1000000.0,
-            thrust_range=(0.0, 16.0),
-            thrust_const_range=(2e-8, 2.5e-8),
-            tau_inc_range=(0.05, 0.1),
-            tau_dec_range=(0.05, 0.1),
+            thrust_range=(0.0, 20.0),
+            thrust_const_range=(2.e-8, 3e-8),
+            tau_inc_range=(0.00, 0.0),
+            tau_dec_range=(0.00, 0.0),
             torque_to_thrust_ratio=0.0,
             thruster_names_expr=["prop0_link", "prop1_link", "prop2_link", "prop3_link"],
         )
@@ -85,7 +86,7 @@ class RacerCfg(MultirotorCfg):
         [1.0, 1.0, 1.0, 1.0],
         [0.0675, 0.0675, -0.0675, -0.0675],
         [-0.085, 0.085, 0.085, -0.085],
-        [0.5, -0.5, 0.5, -0.5],
+        [0.013, -0.013, 0.013, -0.013],
     ]
 
     rotor_directions = [1, -1, 1, -1]
@@ -97,21 +98,24 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
     decimation = 1
     episode_length_s = 5.0
     sim_rate_hz = 300.0
-    mpc_rate_hz = 50.0
+    mpc_rate_hz = 100.0
     pd_rate_hz = 300.0
     camera_rate_hz = 30.0
+    imu_rate_hz = mpc_rate_hz * 2.0
+    time_horizon_s = 1.0
     # - spaces definition
     action_space = 4
     observation_space = 6
     state_space = 0
 
     templates = [
-        HeartTemplate(), 
-        PowerloopTemplate(), 
-        SplitSLeftTemplate(),
-        SplitSRightTemplate(),
-        BarrelRollLeftTemplate(),
-        BarrelRollRightTemplate(),    
+        # HeartTemplate(), 
+        # PowerloopTemplate(), 
+        # SplitSLeftTemplate(),
+        # SplitSRightTemplate(),
+        # BarrelRollLeftTemplate(),
+        # BarrelRollRightTemplate(),    
+        StraightLineTemplate(),
     ]
 
     # simulation
@@ -119,44 +123,45 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
 
     # robot(s)
     robot_cfg: MultirotorCfg = RacerCfg()
+    robot_cfg.actuators["thrusters"].dt = 1 / sim_rate_hz
 
     # controller
     controller_cfg: CtbrPdControllerCfg = CtbrPdControllerCfg(
-        dt=sim.dt * decimation,
-        kp=(0.5, 0.5, 0.3),
-        kd=(0.03, 0.03, 0.0),
+        dt=1 / pd_rate_hz,
+        kp=(0.3, 0.3, 0.1),
+        kd=(0.0, 0.0, 0.0),
         allocation_matrix=(
             (1.0, 1.0, 1.0, 1.0),
             (0.0675, 0.0675, -0.0675, -0.0675),
             (-0.085, 0.085, 0.085, -0.085),
-            (0.5, -0.5, 0.5, -0.5),
+            (0.013, -0.013, 0.013, -0.013),
         ),
         thrust_min=0.0,
-        thrust_max=16.0,
+        thrust_max=20.0,
     )
 
     # MPC controller
-    mpc_cfg: MpcCfg = MpcCfg(
+    mpc_cfg = MpcCfg(
         horizon=10,
         solver_max_iter=100,
-        solver_tol=1e-4,
+        solver_tol=1e-3,
         horizon_dt=0.05,
-        dt=1 / mpc_rate_hz,
-        w_pos=5.0,
-        w_quat=5.0,
-        w_vel=1.0,
-        w_body_rate=0.0,
-        w_output=0.01,
-        w_output_derivative=0.01,
-        max_normalized_thrust=50.0,
-        max_roll_pitch_rate=10.0,
+        dt=1/mpc_rate_hz,
+        w_pos=10.5,
+        w_quat=2.0,
+        w_vel=5,
+        w_body_rate=0.5,
+        w_output=1.0,
+        w_output_derivative=1.5,
+        max_normalized_thrust=60.0,
+        max_roll_pitch_rate=20.0,
         max_yaw_rate=10.0,
     )
 
     # trajectory reference for mpc
     trj_interface_cfg = TrajectoryInterfaceCfg(
         sampling_rate=300,
-        time_penalty=100,
+        time_penalty=10,
         max_velocity=20,
         max_normalized_thrust=50,
     )
@@ -180,6 +185,11 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
         ),
         width=160,
         height=120,
+    )
+
+    noisy_imu: NoisyImuCfg = NoisyImuCfg(
+        prim_path=f"{robot_cfg.prim_path}/base_link",
+        update_period=1 / imu_rate_hz,
     )
 
     # scene

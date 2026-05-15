@@ -47,17 +47,19 @@ class MPCController:
 	def make_step(self, x0, horizon):
 		self._set_horizon(horizon)
 		self._current_x = x0
-		u0 = self.mpc.make_step(x0)
+		self.mpc.x0 = x0[:10]  # Assuming x0 is [pos(3), quat(4), vel(3)]
+		# print("MPCController make_step called with x0:", x0)
+		# print("MPCController make_step called with horizon shape:", horizon[:1, :])
+		# input()
+		u0 = self.mpc.make_step(x0[:10])
 		return u0
 	
-	def _setup(self, x0):
+	def _setup(self, x0): 
 		self._current_x = x0
 		model = do_mpc.model.Model("continuous")
 		p = model.set_variable(var_type="_x", var_name="p", shape=(3,1))
 		quat = model.set_variable(var_type="_x", var_name="quat", shape=(4,1))
 		v = model.set_variable(var_type="_x", var_name="v", shape=(3,1))
-		body_rate = model.set_variable(var_type="_x", var_name="body_rate", shape=(3,1))
-
 		p_ref = model.set_variable(var_type="_tvp", var_name="p_ref", shape=(3,1))
 		quat_ref = model.set_variable(var_type="_tvp", var_name="quat_ref", shape=(4,1))
 		v_ref = model.set_variable(var_type="_tvp", var_name="v_ref", shape=(3,1))
@@ -68,17 +70,15 @@ class MPCController:
 		
 		g = np.array([0, 0, -self.cfg.gravity])
 
-		model.set_rhs("body_rate", w)
-		model.set_rhs("quat", quat_derivative_ca(quat, body_rate))
+		model.set_rhs("quat", quat_derivative_ca(quat, w))
 		model.set_rhs("v", g + quat_apply_ca(quat, ca.vertcat(0, 0, thrust)))
 		model.set_rhs("p", v)
-		
 
 		model.setup()
 		self.mpc = do_mpc.controller.MPC(model)
 		params = {
 			"n_horizon": self.cfg.horizon,
-			"t_step": self.cfg.dt,
+			"t_step": self.cfg.horizon_dt,
 			"n_robust": 0,
 			"store_full_solution": True,
 			
@@ -93,17 +93,16 @@ class MPCController:
 		self.mpc.settings.supress_ipopt_output()
 		self.tvp_template = self.mpc.get_tvp_template()
 
-
+		q_err = get_quat_error(quat, quat_ref)
 		# set up cost function
 		m_term = ca.norm_2(p - p_ref)**2 * self.cfg.w_pos + \
-			ca.norm_2(quat - quat_ref)**2 * self.cfg.w_quat + \
-			ca.norm_2(v - v_ref)**2 * self.cfg.w_vel + \
-			ca.norm_2(body_rate - body_rate_ref)**2 * self.cfg.w_body_rate
+			ca.norm_2(q_err[0:3])**2 * self.cfg.w_quat + \
+			ca.norm_2(v - v_ref)**2 * self.cfg.w_vel
 		
 		l_term = ca.norm_2(p - p_ref)**2 * self.cfg.w_pos + \
-			ca.norm_2(quat - quat_ref)**2 * self.cfg.w_quat + \
+			ca.norm_2(q_err[0:3])**2 * self.cfg.w_quat + \
 			ca.norm_2(v - v_ref)**2 * self.cfg.w_vel + \
-			ca.norm_2(body_rate - body_rate_ref)**2 * self.cfg.w_body_rate + \
+			ca.norm_2(w - body_rate_ref)**2 * self.cfg.w_body_rate + \
 			ca.norm_2(w)**2 * self.cfg.w_output
 
 		self.mpc.set_objective(mterm=m_term, lterm=l_term)
@@ -118,7 +117,7 @@ class MPCController:
 		self.mpc.set_tvp_fun(self._tvp_func)
 		self.mpc.setup()
 		
-		self.mpc.x0 = x0
+		self.mpc.x0 = x0[:10]
 		self.mpc.set_initial_guess()
 
 	def _tvp_func(self, t_now):
