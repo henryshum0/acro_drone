@@ -113,9 +113,9 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
         # PowerloopTemplate(), 
         # SplitSLeftTemplate(),
         # SplitSRightTemplate(),
-        # BarrelRollLeftTemplate(),
+        BarrelRollLeftTemplate(),
         # BarrelRollRightTemplate(),    
-        StraightLineTemplate(),
+        # StraightLineTemplate(),
     ]
 
     # simulation
@@ -147,12 +147,11 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
         solver_tol=1e-3,
         horizon_dt=0.05,
         dt=1/mpc_rate_hz,
-        w_pos=10.5,
-        w_quat=2.0,
-        w_vel=5,
-        w_body_rate=0.5,
-        w_output=1.0,
-        w_output_derivative=1.5,
+        w_pos=10.0,
+        w_quat=20.0,
+        w_vel=2,
+        w_output=0.0,
+        w_output_derivative=0.1,
         max_normalized_thrust=60.0,
         max_roll_pitch_rate=20.0,
         max_yaw_rate=10.0,
@@ -161,7 +160,7 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
     # trajectory reference for mpc
     trj_interface_cfg = TrajectoryInterfaceCfg(
         sampling_rate=300,
-        time_penalty=10,
+        time_penalty=100,
         max_velocity=20,
         max_normalized_thrust=50,
     )
@@ -173,7 +172,7 @@ class AcroDroneEnvCfg(DirectRLEnvCfg):
         offset=TiledCameraCfg.OffsetCfg(
             pos=(0.1, 0.0, 0.05),
             rot=(1.0, 0.0, 0.0, 0.0),
-            convention="ros",
+            convention="world",
         ),
         data_types=["rgb"],
         spawn=sim_utils.FisheyeCameraCfg(

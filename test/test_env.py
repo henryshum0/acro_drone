@@ -17,7 +17,7 @@ from isaaclab.app import AppLauncher
 parser = argparse.ArgumentParser()
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
-app_launcher = AppLauncher(headless=True, enable_cameras=True)
+app_launcher = AppLauncher(headless=False, enable_cameras=True)
 simulation_app = app_launcher.app
 
 from isaaclab_contrib.assets.multirotor.multirotor_data import MultirotorData

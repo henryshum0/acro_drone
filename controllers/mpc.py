@@ -102,7 +102,6 @@ class MPCController:
 		l_term = ca.norm_2(p - p_ref)**2 * self.cfg.w_pos + \
 			ca.norm_2(q_err[0:3])**2 * self.cfg.w_quat + \
 			ca.norm_2(v - v_ref)**2 * self.cfg.w_vel + \
-			ca.norm_2(w - body_rate_ref)**2 * self.cfg.w_body_rate + \
 			ca.norm_2(w)**2 * self.cfg.w_output
 
 		self.mpc.set_objective(mterm=m_term, lterm=l_term)

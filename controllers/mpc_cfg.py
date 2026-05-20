@@ -18,7 +18,6 @@ class MpcCfg:
 	w_pos:float = MISSING
 	w_quat:float = MISSING
 	w_vel:float = MISSING
-	w_body_rate:float = MISSING
 	w_output:float = MISSING
 	w_output_derivative:float = MISSING
 	

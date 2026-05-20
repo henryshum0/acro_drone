@@ -118,7 +118,7 @@ class AcroDroneEnv(DirectRLEnv):
             root_pos = self.robot.data.root_pos_w - self.scene.env_origins
             root_quat = math_utils.convert_quat(self.robot.data.root_quat_w, to="xyzw")
             root_lin_vel = self.robot.data.root_lin_vel_w
-            root_ang_vel = self.robot.data.root_ang_vel_w
+            root_ang_vel = self.robot.data.root_ang_vel_b
             x0 = torch.cat((root_pos, root_quat, root_lin_vel, root_ang_vel), dim=-1)
             mpc_u = self.mpc.make_step(x0.detach().cpu().numpy(), horizon)
             horizon_tensor = torch.as_tensor(horizon, device=self.device, dtype=torch.float32)
