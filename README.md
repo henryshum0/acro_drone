@@ -8,3 +8,13 @@ This project runs under the Isaac Lab.   <a href="https://isaac-sim.github.io/Is
 cd <your_isaaclab_root>/source/isaaclab_tasks/isaaclab_tasks/direct/
 git clone https://github.com/henryshum0/drone_fyp
 ```
+
+## Local Python setup
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+touch ./.venv/COLCON_IGNORE
+python3 -m pip install --upgrade pip
+python3 -m pip install -e .
+```

@@ -2,18 +2,15 @@
 from __future__ import annotations
 from dataclasses import MISSING
 
-from isaaclab.utils import configclass
+from dataclasses import dataclass, field
 
-@configclass
+@dataclass
 class MpcCfg:
 	"""Configuration for MPC controller."""
 	# Prediction horizon in seconds.
 	horizon: int = MISSING
 	horizon_dt: float = MISSING
-	
-	# Control timestep in seconds.
-	dt: float = MISSING
-	
+
 	# Weights for MPC cost terms.
 	w_pos:float = MISSING
 	w_quat:float = MISSING

@@ -1,23 +1,14 @@
-import argparse
-from isaaclab.app import AppLauncher
 
-parser = argparse.ArgumentParser()
-AppLauncher.add_app_launcher_args(parser)
-args_cli = parser.parse_args()
-
-app_launcher = AppLauncher(headless=True)
-simulation_app = app_launcher.app
 
 import numpy as np
 import do_mpc
 from typing import List
 
-from isaaclab_tasks.direct.acro_drone.controllers.mpc import MpcCfg, MPCControllerWrapper
-
-from isaaclab_tasks.direct.acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate, BarrelRollLeftTemplate, StraightLineTemplate
-from isaaclab_tasks.direct.acro_drone.trajectory.base_templates import WaypointTemplate
-from isaaclab_tasks.direct.acro_drone.trajectory.trj_interface import TrajectoryInterface
-from isaaclab_tasks.direct.acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
+from acro_drone.acro_drone.controllers.mpc import MpcCfg, MPCControllerWrapper
+from acro_drone.acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate, BarrelRollLeftTemplate, StraightLineTemplate
+from acro_drone.acro_drone.trajectory.base_templates import WaypointTemplate
+from acro_drone.acro_drone.trajectory.trj_interface import TrajectoryInterface
+from acro_drone.acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
 
 
 cfg = MpcCfg(
@@ -25,13 +16,11 @@ cfg = MpcCfg(
     solver_max_iter=100,
     solver_tol=1e-3,
     horizon_dt=1/50,
-    dt=1/50,
-    w_pos=1.5,
-    w_quat=2.0,
-    w_vel=0.5,
-    w_body_rate=0.1,
-    w_output=1.0,
-    w_output_derivative=1.5,
+    w_pos=10,
+    w_quat=20,
+    w_vel=2,
+    w_output=0,
+    w_output_derivative=0.1,
     max_normalized_thrust=60.0,
     max_roll_pitch_rate=20.0,
     max_yaw_rate=10.0,
@@ -73,7 +62,7 @@ mpl.rcParams['lines.linewidth'] = 3
 mpl.rcParams['axes.grid'] = True
 
 simulator = do_mpc.simulator.Simulator(mpc_controller.mpc_controllers[0].mpc.model)
-simulator.set_param(t_step=cfg.dt)
+simulator.set_param(t_step=cfg.horizon_dt)
 sim_tvp_temp = simulator.get_tvp_template()
 
 def sim_tvp_fun(t_now):
@@ -185,7 +174,7 @@ for i in range(num_steps):
 	x0[0] = sim_state
 	sim_positions.append(sim_state[0:3].copy())
 	sim_quats.append(sim_state[3:7].copy())
-	t += cfg.dt
+	t += cfg.horizon_dt
 
 sim_graphics.plot_results()
 sim_graphics.reset_axes()
@@ -193,7 +182,7 @@ fig.legend(loc="upper right")
 fig.show()
 
 mpc_actions = np.asarray(mpc_actions, dtype=float)
-time_axis = np.arange(len(mpc_actions)) * cfg.dt
+time_axis = np.arange(len(mpc_actions)) * cfg.horizon_dt
 
 fig_actions, ax_actions = plt.subplots(4, sharex=True, figsize=(10, 9))
 fig_actions.suptitle("MPC Output")
@@ -265,15 +254,4 @@ ax_orient.set_title("MPC Trajectory with Body Axes")
 set_equal_3d_axes(ax_orient, sim_positions)
 ax_orient.set_box_aspect((1, 1, 1))
 fig_orient.show()
-input()
-# for i in range(100):
-# 	x0 = np.concatenate(trj_interface.get_state_at_time(env_id=0, t=t)).reshape(13,)
-# 	horizon = np.hstack(trj_interface.get_trajectory_window(
-# 		env_id=0,
-# 		t_start=t,
-# 		t_end=t + cfg.horizon * cfg.horizon_dt,
-# 		time_step=cfg.horizon_dt,
-# 	))
-# 	mpc_controller.set_horizon(horizon)
-# 	u = mpc_controller.mpc.make_step(x0)
-simulation_app.close()
+input("Press Enter to exit...")

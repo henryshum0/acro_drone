@@ -1,12 +1,10 @@
 """Configuration for collective-thrust/body-rate PD controller."""
 
 from __future__ import annotations
-from dataclasses import MISSING
-
-from isaaclab.utils import configclass
+from dataclasses import MISSING, dataclass, field
 
 
-@configclass
+@dataclass
 class CtbrPdControllerCfg:
     """PD controller config for [collective thrust, body rate]."""
     # Derivative term timestep in seconds.

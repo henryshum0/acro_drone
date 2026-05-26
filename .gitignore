@@ -1,2 +1,9 @@
 __pycache__
 *.png
+venv
+.vscode
+src/acro_drone.egg-info
+build
+install
+log
+px4_msgs
