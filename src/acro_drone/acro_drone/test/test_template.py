@@ -1,5 +1,5 @@
 
-from acro_drone.acro_drone.trajectory.acro_templates import *
+from acro_drone.trajectory.acro_templates import *
 
 TRAIN_TEMPLATES2 = [
 	PowerloopTemplate,
@@ -9,9 +9,9 @@ TRAIN_TEMPLATES2 = [
 	BarrelRollLeftTemplate,
 ]
 
-from acro_drone.acro_drone.trajectory.trajectory_generation import build_trajectory_from_template, trajectory_from_template, sample_discrete_trajectory
-from acro_drone.acro_drone.trajectory.trajectory_optimize import optimize_trj_time
-template = BarrelRollLeftTemplate()
+from acro_drone.trajectory.trajectory_generation import build_trajectory_from_template, trajectory_from_template, sample_discrete_trajectory
+from acro_drone.trajectory.trajectory_optimize import optimize_trj_time
+template = PowerloopTemplate()
 trajectory = build_trajectory_from_template(template)
 optimized_traj, optimized_time, min_result = optimize_trj_time(
     trajectory,

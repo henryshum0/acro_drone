@@ -8,7 +8,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.spatial.transform import Slerp, Rotation
 
-from .trajectory_generation import sample_discrete_trajectory, build_trajectory_from_template
+from .trajectory_generation import build_trajectory_from_given_points, sample_discrete_trajectory, build_trajectory_from_template
 from .trajectory_optimize import optimize_trj_time
 from .trj_interface_data import TrajectoryData
 from .trj_interface_cfg import TrajectoryInterfaceCfg
@@ -48,7 +48,7 @@ class TrajectoryInterface:
         self._quat_interp: dict[int, Slerp | None] = {i: None for i in range(num_envs)}
         self._body_rate_interp: dict[int, interp1d | None] = {i: None for i in range(num_envs)}
     
-    def reset_idx(self, env_ids_seq: list[int], templates: list[WaypointTemplate]) -> None:
+    def reset_idx(self, env_ids_seq: list[int], templates: list[WaypointTemplate]=None, points:dict=None) -> None:
         """Reset the reference trajectory for a specific environment.
         
         Randomly samples a template from the provided list (or uses the single template),
@@ -73,7 +73,12 @@ class TrajectoryInterface:
                 template = templates[np.random.randint(len(templates))]
             
             # Build trajectory from randomly selected template
-            trajectory = build_trajectory_from_template(template)
+            if template is not None:
+                trajectory = build_trajectory_from_template(template)
+            elif points is not None:
+                trajectory = build_trajectory_from_given_points(**points)
+            else:
+                raise ValueError("Either templates or points must be provided to build a trajectory.")
             
             # Apply time optimization if configured
             if self.cfg.optimize_time:

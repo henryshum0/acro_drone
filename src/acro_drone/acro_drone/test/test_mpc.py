@@ -1,14 +1,13 @@
 
-
 import numpy as np
 import do_mpc
 from typing import List
 
-from acro_drone.acro_drone.controllers.mpc import MpcCfg, MPCControllerWrapper
-from acro_drone.acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate, BarrelRollLeftTemplate, StraightLineTemplate
-from acro_drone.acro_drone.trajectory.base_templates import WaypointTemplate
-from acro_drone.acro_drone.trajectory.trj_interface import TrajectoryInterface
-from acro_drone.acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
+from acro_drone.controllers.mpc import MpcCfg, MPCControllerWrapper
+from acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate, BarrelRollLeftTemplate, StraightLineTemplate
+from acro_drone.trajectory.base_templates import WaypointTemplate
+from acro_drone.trajectory.trj_interface import TrajectoryInterface
+from acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
 
 
 cfg = MpcCfg(
@@ -153,7 +152,7 @@ ax[3].set_xlabel("Time (s)")
 t = 0.0
 sim_state = x0[0].copy()
 traj_total_time = trj_interface.get_trj_time(env_ids=[0])
-num_steps = 150
+num_steps = 300
 
 sim_positions = [sim_state[0:3].copy()]
 sim_quats = [sim_state[3:7].copy()]
@@ -162,6 +161,7 @@ mpc_actions = []
 
 for i in range(num_steps):
 	horizon = np.zeros((num_envs, cfg.horizon + 1, 13), dtype=float)
+	# horizon[:,6] = 1.0
 	horizon = trj_interface.get_trajectory_window(
 		env_ids=env_ids,
 		t_start=t,

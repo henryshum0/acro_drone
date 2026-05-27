@@ -2,9 +2,9 @@ import argparse
 import numpy as np
 
 
-from acro_drone.acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate
-from acro_drone.acro_drone.trajectory.trj_interface import TrajectoryInterface
-from acro_drone.acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
+from acro_drone.trajectory.acro_templates import HeartTemplate, PowerloopTemplate, SplitSLeftTemplate
+from acro_drone.trajectory.trj_interface import TrajectoryInterface
+from acro_drone.trajectory.trj_interface_cfg import TrajectoryInterfaceCfg
 
 
 def main():
@@ -18,7 +18,14 @@ def main():
 	interface = TrajectoryInterface(num_envs=2, cfg=cfg)
 
 	templates = [HeartTemplate()]
-	interface.reset_idx(env_ids_seq=[0,1], templates=templates)
+	points = {
+		"xyzs": [[0, 0, 0], [1, 1, 1], [2, 0, 2]], 
+		"rpys": [[0, 0, 0], [0, 0, np.pi/4], [0, 0, np.pi/2]], 
+		"vels": [[0, 0, 0], None, [0, 0, 0]], 
+		"accs": [[0, 0, 0], None, [0, 0, 0]], 
+		"durations": [2.0, 2.0],
+	}
+	interface.reset_idx(env_ids_seq=[0,1], points=points)
 
 	state = interface.get_state_at_time(env_ids=[0], t=0.5)
 	print("state:", state)

@@ -10,24 +10,22 @@ from .trajectory_optimize import optimize_trj_time
 def sample_template(template:WaypointTemplate) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[bool], float]:
     """Sample a waypoint template and return waypoint positions, orientations, velocities, durations, and accelerations."""
     xyzs = np.asarray(template.waypoints_xyzs, dtype=float)
-    rpys = np.asarray(template.waypoints_rpys, dtype=float)
+    psis = np.asarray(template.waypoints_psis, dtype=float)
     durations = np.asarray(template.waypoints_durations, dtype=float).reshape(-1)
-    spawns = template.spawns
-    max_dist = template.max_dist
 
     # Try to get velocities and accelerations, with fallback defaults
     vels = template.waypoints_vels
     accs = template.waypoints_accs
 
     if (
-        xyzs.shape[0] != rpys.shape[0]
+        xyzs.shape[0] != psis.shape[0]
         or xyzs.shape[0] != len(vels)
         or xyzs.shape[0] != len(accs)
         or xyzs.shape[0] != durations.shape[0]
     ):
-        raise ValueError("Template sample must provide matching xyzs, rpys, vels, accs, and durations lengths")
+        raise ValueError("Template sample must provide matching xyzs, psis, vels, accs, and durations lengths")
 
-    return xyzs, rpys, vels, accs, durations, spawns, max_dist
+    return xyzs, psis, vels, accs, durations
 
 
 def build_trajectory_from_template(
@@ -35,14 +33,36 @@ def build_trajectory_from_template(
 ) -> Trajectory:
     """Build a trajectory from a sampled waypoint template.
     """
-    xyzs, rpys, vels, accs, durations, _, _ = sample_template(template)
+    xyzs, psis, vels, accs, durations = sample_template(template)
 
     if xyzs.shape[0] < 2:
         raise ValueError("A trajectory needs at least two waypoints")
 
     nodes = []
-    for xyz, rpy, vel, acc in zip(xyzs, rpys, vels, accs):
-        nodes.append(Node(pos=xyz, psi=float(rpy[2]), con_vel=vel, con_acc=acc))
+    for xyz, psi, vel, acc in zip(xyzs, psis, vels, accs):
+        nodes.append(Node(pos=xyz, psi=float(psi), con_vel=vel, con_acc=acc))
+
+    segments = []
+    for i in range(len(nodes) - 1):
+        duration = durations[i+1]
+        segments.append(Segment(nodes[i], nodes[i + 1], duration=duration))
+
+    return Trajectory(segments)
+
+def build_trajectory_from_given_points(
+    xyzs: list,
+    psis: list,
+    vels: list,
+    accs: list,
+    durations: list,
+) -> Trajectory:
+    """Build a trajectory from given waypoint positions, orientations, velocities, accelerations, and durations."""
+    if xyzs.shape[0] < 2:
+        raise ValueError("A trajectory needs at least two waypoints")
+
+    nodes = []
+    for xyz, psi, vel, acc in zip(xyzs, psis, vels, accs):
+        nodes.append(Node(pos=xyz, psi=float(psi), con_vel=vel, con_acc=acc))
 
     segments = []
     for i in range(len(nodes) - 1):
