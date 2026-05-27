@@ -26,7 +26,9 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'privileged_agent = acro_drone.privileged_agent:main'
+            'privileged_agent = acro_drone.nodes.privileged_agent:main',
+			'main_node = acro_drone.nodes.main_node:main',
+			'return_node = acro_drone.nodes.return_node:main',
         ],
     },
 )
